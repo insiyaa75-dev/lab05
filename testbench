@@ -1,0 +1,53 @@
+`timescale 1ns / 1ps
+
+module tb_top_fsm;
+    reg clk;
+    reg pbin;
+    reg [15:0] physical_sw;
+    wire [15:0] physical_leds;
+
+    skeleton_top_fsm uut (
+        .clk(clk),
+        .pbin(pbin),
+        .physical_sw(physical_sw),
+        .physical_leds(physical_leds)
+    );
+
+    // 100 MHz clock generation (10ns period)
+    always #5 clk = ~clk;
+
+    initial begin
+        $monitor("Time = %0t ns | Reset = %b | Switches = %d | LEDs = %d",
+                 $time, pbin, physical_sw, physical_leds);
+
+        clk = 0;
+        pbin = 1; // start with reset active
+        physical_sw = 16'd0;
+
+        #100;
+        pbin = 0; // release reset
+
+        #100;
+        physical_sw = 16'd5; // flip switches to 5
+
+        // wait long enough to see the countdown happen in simulation
+        #1000;
+
+        physical_sw = 16'd0; // change switches to 10
+
+        #500;
+        pbin = 1; // hit reset button mid-countdown to test it
+
+        #100;
+        pbin = 0;
+        physical_sw = 16'd0;
+
+        #100;
+        physical_sw = 16'd3; // start a short countdown
+
+        #1000;
+
+        $display("simulation finished");
+        $finish;
+    end
+endmodule
